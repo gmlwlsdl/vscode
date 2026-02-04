@@ -5,6 +5,7 @@
 
 import { Event } from '../../../base/common/event.js';
 import { VSBuffer } from '../../../base/common/buffer.js';
+import { URI } from '../../../base/common/uri.js';
 
 export interface IBrowserViewBounds {
 	windowId: number;
@@ -27,6 +28,7 @@ export interface IBrowserViewState {
 	canGoForward: boolean;
 	loading: boolean;
 	focused: boolean;
+	visible: boolean;
 	isDevToolsOpen: boolean;
 	lastScreenshot: VSBuffer | undefined;
 	lastFavicon: string | undefined;
@@ -55,6 +57,10 @@ export interface IBrowserViewFocusEvent {
 	focused: boolean;
 }
 
+export interface IBrowserViewVisibilityEvent {
+	visible: boolean;
+}
+
 export interface IBrowserViewDevToolsStateEvent {
 	isDevToolsOpen: boolean;
 }
@@ -78,10 +84,16 @@ export interface IBrowserViewFaviconChangeEvent {
 	favicon: string;
 }
 
+export enum BrowserNewPageLocation {
+	Foreground = 'foreground',
+	Background = 'background',
+	NewWindow = 'newWindow'
+}
 export interface IBrowserViewNewPageRequest {
-	url: string;
-	name?: string;
-	background: boolean;
+	resource: URI;
+	location: BrowserNewPageLocation;
+	// Only applicable if location is NewWindow
+	position?: { x?: number; y?: number; width?: number; height?: number };
 }
 
 export interface IBrowserViewFindInPageOptions {
@@ -112,6 +124,7 @@ export interface IBrowserViewService {
 	onDynamicDidNavigate(id: string): Event<IBrowserViewNavigationEvent>;
 	onDynamicDidChangeLoadingState(id: string): Event<IBrowserViewLoadingEvent>;
 	onDynamicDidChangeFocus(id: string): Event<IBrowserViewFocusEvent>;
+	onDynamicDidChangeVisibility(id: string): Event<IBrowserViewVisibilityEvent>;
 	onDynamicDidChangeDevToolsState(id: string): Event<IBrowserViewDevToolsStateEvent>;
 	onDynamicDidKeyCommand(id: string): Event<IBrowserViewKeyDownEvent>;
 	onDynamicDidChangeTitle(id: string): Event<IBrowserViewTitleChangeEvent>;
@@ -243,4 +256,10 @@ export interface IBrowserViewService {
 	 * @param workspaceId The workspace identifier
 	 */
 	clearWorkspaceStorage(workspaceId: string): Promise<void>;
+
+	/**
+	 * Clear storage data for a specific browser view
+	 * @param id The browser view identifier
+	 */
+	clearStorage(id: string): Promise<void>;
 }
